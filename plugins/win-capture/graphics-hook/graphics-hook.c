@@ -43,7 +43,12 @@ char process_name[MAX_PATH] = {0};
 wchar_t keepalive_name[64] = {0};
 HWND dummy_window = NULL;
 
+// Simple fix
+//#pragma data_seg(".SHARED")
 static unsigned int shmem_id_counter = 0;
+//#pragma data_seg()
+//#pragma comment(linker, "/section:.SHARED,rws")
+
 static void *shmem_info = NULL;
 static HANDLE shmem_file_handle = 0;
 

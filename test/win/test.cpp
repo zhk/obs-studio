@@ -112,7 +112,7 @@ static DisplayContext CreateDisplay(HWND hwnd)
 	info.zsformat = GS_ZS_NONE;
 	info.window.hwnd = hwnd;
 
-	return obs_display_create(&info);
+	return obs_display_create(&info, 0xFF4C4C4C);
 }
 
 static void AddTestItems(obs_scene_t *scene, obs_source_t *source)

@@ -15,6 +15,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ******************************************************************************/
 
+#ifndef NO_VIDEO_LIBS
+
 #include "media-remux.h"
 
 #include "../util/base.h"
@@ -275,3 +277,5 @@ void media_remux_job_destroy(media_remux_job_t job)
 
 	bfree(job);
 }
+
+#endif

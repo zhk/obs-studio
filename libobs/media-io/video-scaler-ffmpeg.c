@@ -18,6 +18,8 @@
 #include "../util/bmem.h"
 #include "video-scaler.h"
 
+#ifndef NO_VIDEO_LIBS
+
 #include <libswscale/swscale.h>
 
 struct video_scaler {
@@ -185,3 +187,30 @@ bool video_scaler_scale(video_scaler_t *scaler, uint8_t *output[],
 
 	return true;
 }
+
+#else
+
+int video_scaler_create(video_scaler_t **scaler_out,
+	const struct video_scale_info *dst,
+	const struct video_scale_info *src,
+	enum video_scale_type type)
+{
+	blog(LOG_ERROR, "video_scaler_create() NOT implemented!");
+
+	return VIDEO_SCALER_FAILED;
+}
+
+void video_scaler_destroy(video_scaler_t *scaler)
+{
+}
+
+bool video_scaler_scale(video_scaler_t *scaler,
+	uint8_t *output[], const uint32_t out_linesize[],
+	const uint8_t *const input[], const uint32_t in_linesize[])
+{
+	blog(LOG_ERROR, "video_scaler_scale() NOT implemented!");
+
+	return false;
+}
+
+#endif

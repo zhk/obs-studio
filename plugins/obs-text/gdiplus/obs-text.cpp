@@ -1028,7 +1028,7 @@ bool obs_module_load(void)
 	};
 	si.get_defaults = [](obs_data_t *settings) {
 		obs_data_t *font_obj = obs_data_create();
-		obs_data_set_default_string(font_obj, "face", "Arial");
+		obs_data_set_default_string(font_obj, "face", "Verdana");	// Arial
 		obs_data_set_default_int(font_obj, "size", 36);
 
 		obs_data_set_default_obj(settings, S_FONT, font_obj);

@@ -464,6 +464,8 @@ struct obs_source_info {
 	 * @return          The properties data
 	 */
 	obs_properties_t *(*get_properties2)(void *data, void *type_data);
+
+	bool (*snapshot)(void *data, uint8_t* inout_data, uint32_t* out_w, uint32_t* out_h, uint32_t* out_pitch, uint32_t* out_bpp, bool flipY);
 };
 
 EXPORT void obs_register_source_s(const struct obs_source_info *info,

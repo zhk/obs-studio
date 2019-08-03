@@ -895,6 +895,9 @@ EXPORT uint32_t obs_source_get_width(obs_source_t *source);
 /** Gets the height of a source (if it has video) */
 EXPORT uint32_t obs_source_get_height(obs_source_t *source);
 
+EXPORT bool obs_source_snapshot(obs_source_t *source, uint8_t* inout_data, uint32_t* out_w, uint32_t* out_h
+	, uint32_t* out_pitch, uint32_t* out_bpp, bool flipY);
+
 /**
  * If the source is a filter, returns the parent source of the filter.  Only
  * guaranteed to be valid inside of the video_render, filter_audio,

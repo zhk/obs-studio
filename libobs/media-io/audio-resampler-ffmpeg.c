@@ -18,6 +18,9 @@
 #include "../util/bmem.h"
 #include "audio-resampler.h"
 #include "audio-io.h"
+
+#ifndef NO_VIDEO_LIBS
+
 #include <libavutil/avutil.h>
 #include <libavformat/avformat.h>
 #include <libswresample/swresample.h>
@@ -203,3 +206,29 @@ bool audio_resampler_resample(audio_resampler_t *rs, uint8_t *output[],
 	*out_frames = (uint32_t)ret;
 	return true;
 }
+
+#else
+
+audio_resampler_t *audio_resampler_create(const struct resample_info *dst,
+	const struct resample_info *src)
+{
+	blog(LOG_ERROR, "audio_resampler_create() NOT implemented!");
+
+	return 0;
+}
+
+void audio_resampler_destroy(audio_resampler_t *rs)
+{
+	blog(LOG_ERROR, "audio_resampler_destroy() NOT implemented!");
+}
+
+bool audio_resampler_resample(audio_resampler_t *rs,
+	uint8_t *output[], uint32_t *out_frames, uint64_t *ts_offset,
+	const uint8_t *const input[], uint32_t in_frames)
+{
+	blog(LOG_ERROR, "audio_resampler_resample() NOT implemented!");
+
+	return false;
+}
+
+#endif

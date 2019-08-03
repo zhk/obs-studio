@@ -1273,6 +1273,8 @@ static inline enum capture_result init_capture_data(struct game_capture *gc)
 		return CAPTURE_FAIL;
 	}
 
+	info("init_capture_data(), title: %s map_id: %d", gc->title.array, gc->global_hook_info->map_id);
+
 	return CAPTURE_SUCCESS;
 }
 
@@ -2088,6 +2090,411 @@ static obs_properties_t *game_capture_properties(void *data)
 	return ppts;
 }
 
+uint32_t GetBitsPerPixel(DXGI_FORMAT fmt)
+{
+	switch (fmt)
+	{
+	case DXGI_FORMAT_R32G32B32A32_TYPELESS:
+	case DXGI_FORMAT_R32G32B32A32_FLOAT:
+	case DXGI_FORMAT_R32G32B32A32_UINT:
+	case DXGI_FORMAT_R32G32B32A32_SINT:
+		return 128;
+
+	case DXGI_FORMAT_R32G32B32_TYPELESS:
+	case DXGI_FORMAT_R32G32B32_FLOAT:
+	case DXGI_FORMAT_R32G32B32_UINT:
+	case DXGI_FORMAT_R32G32B32_SINT:
+		return 96;
+
+	case DXGI_FORMAT_R16G16B16A16_TYPELESS:
+	case DXGI_FORMAT_R16G16B16A16_FLOAT:
+	case DXGI_FORMAT_R16G16B16A16_UNORM:
+	case DXGI_FORMAT_R16G16B16A16_UINT:
+	case DXGI_FORMAT_R16G16B16A16_SNORM:
+	case DXGI_FORMAT_R16G16B16A16_SINT:
+	case DXGI_FORMAT_R32G32_TYPELESS:
+	case DXGI_FORMAT_R32G32_FLOAT:
+	case DXGI_FORMAT_R32G32_UINT:
+	case DXGI_FORMAT_R32G32_SINT:
+	case DXGI_FORMAT_R32G8X24_TYPELESS:
+	case DXGI_FORMAT_D32_FLOAT_S8X24_UINT:
+	case DXGI_FORMAT_R32_FLOAT_X8X24_TYPELESS:
+	case DXGI_FORMAT_X32_TYPELESS_G8X24_UINT:
+	case DXGI_FORMAT_Y416:
+	case DXGI_FORMAT_Y210:
+	case DXGI_FORMAT_Y216:
+		return 64;
+
+	case DXGI_FORMAT_R10G10B10A2_TYPELESS:
+	case DXGI_FORMAT_R10G10B10A2_UNORM:
+	case DXGI_FORMAT_R10G10B10A2_UINT:
+	case DXGI_FORMAT_R11G11B10_FLOAT:
+	case DXGI_FORMAT_R8G8B8A8_TYPELESS:
+	case DXGI_FORMAT_R8G8B8A8_UNORM:
+	case DXGI_FORMAT_R8G8B8A8_UNORM_SRGB:
+	case DXGI_FORMAT_R8G8B8A8_UINT:
+	case DXGI_FORMAT_R8G8B8A8_SNORM:
+	case DXGI_FORMAT_R8G8B8A8_SINT:
+	case DXGI_FORMAT_R16G16_TYPELESS:
+	case DXGI_FORMAT_R16G16_FLOAT:
+	case DXGI_FORMAT_R16G16_UNORM:
+	case DXGI_FORMAT_R16G16_UINT:
+	case DXGI_FORMAT_R16G16_SNORM:
+	case DXGI_FORMAT_R16G16_SINT:
+	case DXGI_FORMAT_R32_TYPELESS:
+	case DXGI_FORMAT_D32_FLOAT:
+	case DXGI_FORMAT_R32_FLOAT:
+	case DXGI_FORMAT_R32_UINT:
+	case DXGI_FORMAT_R32_SINT:
+	case DXGI_FORMAT_R24G8_TYPELESS:
+	case DXGI_FORMAT_D24_UNORM_S8_UINT:
+	case DXGI_FORMAT_R24_UNORM_X8_TYPELESS:
+	case DXGI_FORMAT_X24_TYPELESS_G8_UINT:
+	case DXGI_FORMAT_R9G9B9E5_SHAREDEXP:
+	case DXGI_FORMAT_R8G8_B8G8_UNORM:
+	case DXGI_FORMAT_G8R8_G8B8_UNORM:
+	case DXGI_FORMAT_B8G8R8A8_UNORM:
+	case DXGI_FORMAT_B8G8R8X8_UNORM:
+	case DXGI_FORMAT_R10G10B10_XR_BIAS_A2_UNORM:
+	case DXGI_FORMAT_B8G8R8A8_TYPELESS:
+	case DXGI_FORMAT_B8G8R8A8_UNORM_SRGB:
+	case DXGI_FORMAT_B8G8R8X8_TYPELESS:
+	case DXGI_FORMAT_B8G8R8X8_UNORM_SRGB:
+	case DXGI_FORMAT_AYUV:
+	case DXGI_FORMAT_Y410:
+	case DXGI_FORMAT_YUY2:
+	//case XBOX_DXGI_FORMAT_R10G10B10_7E3_A2_FLOAT:
+	//case XBOX_DXGI_FORMAT_R10G10B10_6E4_A2_FLOAT:
+	//case XBOX_DXGI_FORMAT_R10G10B10_SNORM_A2_UNORM:
+		return 32;
+
+	case DXGI_FORMAT_P010:
+	case DXGI_FORMAT_P016:
+	//case XBOX_DXGI_FORMAT_D16_UNORM_S8_UINT:
+	//case XBOX_DXGI_FORMAT_R16_UNORM_X8_TYPELESS:
+	//case XBOX_DXGI_FORMAT_X16_TYPELESS_G8_UINT:
+	//case WIN10_DXGI_FORMAT_V408:
+		return 24;
+
+	case DXGI_FORMAT_R8G8_TYPELESS:
+	case DXGI_FORMAT_R8G8_UNORM:
+	case DXGI_FORMAT_R8G8_UINT:
+	case DXGI_FORMAT_R8G8_SNORM:
+	case DXGI_FORMAT_R8G8_SINT:
+	case DXGI_FORMAT_R16_TYPELESS:
+	case DXGI_FORMAT_R16_FLOAT:
+	case DXGI_FORMAT_D16_UNORM:
+	case DXGI_FORMAT_R16_UNORM:
+	case DXGI_FORMAT_R16_UINT:
+	case DXGI_FORMAT_R16_SNORM:
+	case DXGI_FORMAT_R16_SINT:
+	case DXGI_FORMAT_B5G6R5_UNORM:
+	case DXGI_FORMAT_B5G5R5A1_UNORM:
+	case DXGI_FORMAT_A8P8:
+	case DXGI_FORMAT_B4G4R4A4_UNORM:
+	//case WIN10_DXGI_FORMAT_P208:
+	//case WIN10_DXGI_FORMAT_V208:
+		return 16;
+
+	case DXGI_FORMAT_NV12:
+	case DXGI_FORMAT_420_OPAQUE:
+	case DXGI_FORMAT_NV11:
+		return 12;
+
+	case DXGI_FORMAT_R8_TYPELESS:
+	case DXGI_FORMAT_R8_UNORM:
+	case DXGI_FORMAT_R8_UINT:
+	case DXGI_FORMAT_R8_SNORM:
+	case DXGI_FORMAT_R8_SINT:
+	case DXGI_FORMAT_A8_UNORM:
+	case DXGI_FORMAT_AI44:
+	case DXGI_FORMAT_IA44:
+	case DXGI_FORMAT_P8:
+	//case XBOX_DXGI_FORMAT_R4G4_UNORM:
+		return 8;
+
+	case DXGI_FORMAT_R1_UNORM:
+		return 1;
+
+	case DXGI_FORMAT_BC1_TYPELESS:
+	case DXGI_FORMAT_BC1_UNORM:
+	case DXGI_FORMAT_BC1_UNORM_SRGB:
+	case DXGI_FORMAT_BC4_TYPELESS:
+	case DXGI_FORMAT_BC4_UNORM:
+	case DXGI_FORMAT_BC4_SNORM:
+		return 4;
+
+	case DXGI_FORMAT_BC2_TYPELESS:
+	case DXGI_FORMAT_BC2_UNORM:
+	case DXGI_FORMAT_BC2_UNORM_SRGB:
+	case DXGI_FORMAT_BC3_TYPELESS:
+	case DXGI_FORMAT_BC3_UNORM:
+	case DXGI_FORMAT_BC3_UNORM_SRGB:
+	case DXGI_FORMAT_BC5_TYPELESS:
+	case DXGI_FORMAT_BC5_UNORM:
+	case DXGI_FORMAT_BC5_SNORM:
+	case DXGI_FORMAT_BC6H_TYPELESS:
+	case DXGI_FORMAT_BC6H_UF16:
+	case DXGI_FORMAT_BC6H_SF16:
+	case DXGI_FORMAT_BC7_TYPELESS:
+	case DXGI_FORMAT_BC7_UNORM:
+	case DXGI_FORMAT_BC7_UNORM_SRGB:
+		return 8;
+
+	default:
+		return 0;
+	}
+}
+
+// https://stackoverflow.com/questions/2973708/fast-24-bit-array-32-bit-array-conversion
+// 4 pixels once
+void ConvRGB32ToRGB24(const uint32_t *Src, uint32_t *Dst, uint32_t Pixels)
+{
+#if !USE_ASM
+	for (uint32_t i = 0; i < Pixels; i += 4)
+	{
+		uint32_t    sa = Src[i + 0] & 0xffffff;
+		uint32_t    sb = Src[i + 1] & 0xffffff;
+		uint32_t    sc = Src[i + 2] & 0xffffff;
+		uint32_t    sd = Src[i + 3];
+		Dst[0] = sa | (sb << 24);
+		Dst[1] = (sb >> 8) | (sc << 16);
+		Dst[2] = (sc >> 16) | (sd << 8);
+		Dst += 3;
+	}
+#else
+	__asm
+	{
+		mov     ecx, Pixels
+		shr     ecx, 2              // 4 pixels at once
+		jz      ConvRGB32ToRGB24_$2
+		mov     esi, Src
+		mov     edi, Dst
+		ConvRGB32ToRGB24_$1 :
+		mov     ebx, [esi + 4]      // sb
+		and ebx, 0ffffffh			// sb & 0xffffff
+		mov     eax, [esi + 0]      // sa
+		and eax, 0ffffffh			// sa & 0xffffff
+		mov     edx, ebx            // copy sb
+		shl     ebx, 24             // sb << 24
+		or eax, ebx					// sa | (sb << 24)
+		mov[edi + 0], eax			// Dst[0]
+		shr     edx, 8              // sb >> 8
+		mov     eax, [esi + 8]      // sc
+		and eax, 0ffffffh			// sc & 0xffffff
+		mov     ebx, eax            // copy sc
+		shl     eax, 16             // sc << 16
+		or eax, edx					// (sb >> 8) | (sc << 16)
+		mov[edi + 4], eax			// Dst[1]
+		shr     ebx, 16             // sc >> 16
+		mov     eax, [esi + 12]     // sd
+		add     esi, 16             // Src += 4 (ASAP)
+		shl     eax, 8              // sd << 8
+		or eax, ebx					// (sc >> 16) | (sd << 8)
+		mov[edi + 8], eax			// Dst[2]
+		add     edi, 12             // Dst += 3
+		dec     ecx
+		jnz     SHORT ConvRGB32ToRGB24_$1
+		ConvRGB32ToRGB24_$2 :
+	}
+#endif
+}
+
+void ConvRGB24ToRGB32(const uint32_t *Src, uint32_t *Dst, uint32_t Pixels)
+{
+#if !USE_ASM
+	for (uint32_t i = 0; i < Pixels; i += 4)
+	{
+		uint32_t    sa = Src[0];
+		uint32_t    sb = Src[1];
+		uint32_t    sc = Src[2];
+		Dst[i + 0] = sa & 0xffffff;
+		Dst[i + 1] = ((sa >> 24) | (sb << 8)) & 0xffffff;
+		Dst[i + 2] = ((sb >> 16) | (sc << 16)) & 0xffffff;
+		Dst[i + 3] = sc >> 8;
+		Src += 3;
+	}
+#else
+	__asm {
+		mov     ecx, Pixels
+		shr     ecx, 2              // 4 pixels at once
+		jz      SHORT ConvRGB24ToRGB32_$2
+		mov     esi, Src
+		mov     edi, Dst
+		push    ebp
+		ConvRGB24ToRGB32_$1 :
+		mov     ebx, [esi + 4]      // sb
+		mov     edx, ebx            // copy sb
+		mov     eax, [esi + 0]      // sa
+		mov     ebp, eax            // copy sa
+		and     ebx, 0ffffh         // sb & 0xffff
+		shl     ebx, 8              // (sb & 0xffff) << 8
+		and eax, 0ffffffh			// sa & 0xffffff
+		mov[edi + 0], eax			// Dst[0]
+		shr     ebp, 24             // sa >> 24
+		or ebx, ebp					// (sa >> 24) | ((sb & 0xffff) << 8)
+		mov[edi + 4], ebx			// Dst[1]
+		shr     edx, 16             // sb >> 16
+		mov     eax, [esi + 8]      // sc
+		add     esi, 12             // Src += 12 (ASAP)
+		mov     ebx, eax            // copy sc
+		and     eax, 0ffh           // sc & 0xff
+		shl     eax, 16             // (sc & 0xff) << 16
+		or eax, edx					// (sb >> 16) | ((sc & 0xff) << 16)
+		mov[edi + 8], eax			// Dst[2]
+		shr     ebx, 8              // sc >> 8
+		mov[edi + 12], ebx			// Dst[3]
+		add     edi, 16             // Dst += 16
+		dec     ecx
+		jnz     SHORT ConvRGB24ToRGB32_$1
+		pop     ebp
+		ConvRGB24ToRGB32_$2 :
+	}
+#endif
+}
+
+void ConvRGB32ToBGR24(const uint32_t *Src, uint32_t *Dst, uint32_t Pixels)
+{
+	for (uint32_t i = 0; i < Pixels; i += 4)
+	{
+		uint32_t    sa = Src[i + 0] & 0xffffff;
+		uint32_t    sb = Src[i + 1] & 0xffffff;
+		uint32_t    sc = Src[i + 2] & 0xffffff;
+		uint32_t    sd = Src[i + 3];
+		Dst[0] = sa | (sb << 24);
+		Dst[1] = (sb >> 8) | (sc << 16);
+		Dst[2] = (sc >> 16) | (sd << 8);
+
+		// 4 pixels once
+		uint8_t* destByte = (uint8_t *)Dst;
+		for (int i = 0; i < 4; ++i)
+		{
+			uint8_t ch = *destByte;
+			*destByte = *(destByte + 2);
+			*(destByte + 2) = ch;
+
+			destByte += 3;
+		}
+
+		Dst += 3;
+	}
+}
+
+#ifndef ALIGN
+#	define ALIGN(bytes, align) (((bytes) + ((align) - 1)) & ~((align) - 1))
+#endif
+
+static bool game_capture_snapshot(void *data, uint8_t* inout_data, uint32_t* out_w, uint32_t* out_h
+	, uint32_t* out_pitch, uint32_t* out_bpp, bool flipY)
+{
+	struct game_capture *gc = data;
+
+	if (gc->cx == 0 || gc->cy == 0 || !gc->shmem_data)
+	{
+		warn("game_capture_snapshot, no data yet!");
+		return false;
+	}
+
+	if (gc->cx > *out_w || gc->cy > *out_h)
+	{
+		warn("game_capture_snapshot, data size(%d, %d) is large than memory(%d, %d)!", gc->cx, gc->cy, *out_w, *out_h);
+		return false;
+	}
+
+	int cur_texture;
+	int next_texture;
+	HANDLE mutex = NULL;
+
+	cur_texture = gc->shmem_data->last_tex;
+
+	if (cur_texture < 0 || cur_texture > 1)
+	{
+		warn("game_capture_snapshot, cur_texture");
+		return false;
+	}
+
+	*out_bpp = GetBitsPerPixel(gc->global_hook_info->format);
+	if (*out_bpp != 32)
+	{
+		warn("game_capture_snapshot, not supported pixel format");
+		return false;
+	}
+
+	*out_pitch = gc->pitch;
+	*out_w = gc->cx;
+	*out_h = gc->cy;
+
+	next_texture = cur_texture == 1 ? 0 : 1;
+
+	if (object_signalled(gc->texture_mutexes[cur_texture])) {
+		mutex = gc->texture_mutexes[cur_texture];
+	}
+	else if (object_signalled(gc->texture_mutexes[next_texture])) {
+		mutex = gc->texture_mutexes[next_texture];
+		cur_texture = next_texture;
+	}
+	else
+	{
+		warn("game_capture_snapshot, texture not ready");
+		return false;
+	}
+
+	char* dest = inout_data;
+
+#if 0
+
+	if (flipY){
+		const char* src = gc->texture_buffers[cur_texture] + (gc->pitch * (gc->cy - 1));
+		for (uint32_t i = 0; i < gc->cy; ++i) {
+			memcpy(dest, src, gc->pitch);
+			dest += gc->pitch;
+			src -= gc->pitch;
+		}
+	}
+	else{
+		memcpy(dest, gc->texture_buffers[cur_texture], gc->pitch * gc->cy);
+	}
+
+#else
+
+	*out_bpp = 24;
+	*out_pitch = gc->cx * 3;
+
+	if (gc->global_hook_info->format == DXGI_FORMAT_R8G8B8A8_UNORM)
+		flipY = !flipY;
+
+	if (flipY) {
+		const char* src = gc->texture_buffers[cur_texture] + (gc->pitch * (gc->cy - 1));
+		for (uint32_t i = 0; i < gc->cy; ++i) {
+			if (gc->global_hook_info->format == DXGI_FORMAT_R8G8B8A8_UNORM)
+				ConvRGB32ToBGR24((uint32_t*)src, (uint32_t*)dest, gc->cx);
+			else
+				ConvRGB32ToRGB24((uint32_t*)src, (uint32_t*)dest, gc->cx);
+
+			dest += *out_pitch;
+			src -= gc->pitch;
+		}
+	}
+	else {
+		const char* src = gc->texture_buffers[cur_texture];
+		for (uint32_t i = 0; i < gc->cy; ++i) {
+			if (gc->global_hook_info->format == DXGI_FORMAT_R8G8B8A8_UNORM)
+				ConvRGB32ToBGR24((uint32_t*)src, (uint32_t*)dest, gc->cx);
+			else
+				ConvRGB32ToRGB24((uint32_t*)src, (uint32_t*)dest, gc->cx);
+
+			dest += *out_pitch;
+			src += gc->pitch;
+		}
+	}
+
+#endif
+
+	ReleaseMutex(mutex);
+
+	return true;
+}
+
 struct obs_source_info game_capture_info = {
 	.id = "game_capture",
 	.type = OBS_SOURCE_TYPE_INPUT,
@@ -2103,4 +2510,5 @@ struct obs_source_info game_capture_info = {
 	.update = game_capture_update,
 	.video_tick = game_capture_tick,
 	.video_render = game_capture_render,
+	.snapshot = game_capture_snapshot
 };

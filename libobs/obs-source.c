@@ -2013,6 +2013,23 @@ uint32_t obs_source_get_height(obs_source_t *source)
 		       : get_base_height(source);
 }
 
+bool obs_source_snapshot(obs_source_t *source, uint8_t* inout_data, uint32_t* out_w, uint32_t* out_h
+	, uint32_t* out_pitch, uint32_t* out_bpp, bool flipY)
+{
+	if (!data_valid(source, "obs_source_snapshot"))
+		return false;
+
+	if (source->info.snapshot){
+		obs_enter_graphics();
+		bool ret = source->info.snapshot(source->context.data, inout_data, out_w, out_h, out_pitch, out_bpp, flipY);
+		obs_leave_graphics();
+		
+		return ret;
+	}
+
+	return false;
+}
+
 uint32_t obs_source_get_base_width(obs_source_t *source)
 {
 	if (!data_valid(source, "obs_source_get_base_width"))
