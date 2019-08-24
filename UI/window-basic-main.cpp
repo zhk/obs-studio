@@ -130,7 +130,7 @@ static void AddExtraModulePaths()
 	if (ret <= 0)
 		return;
 
-	string path = (char *)base_module_dir;
+	string path = base_module_dir;
 #if defined(__APPLE__)
 	obs_add_module_path((path + "/bin").c_str(), (path + "/data").c_str());
 
@@ -286,6 +286,10 @@ OBSBasic::OBSBasic(QWidget *parent)
 	connect(cpuUsageTimer.data(), SIGNAL(timeout()), ui->statusbar,
 		SLOT(UpdateCPUUsage()));
 	cpuUsageTimer->start(3000);
+
+	diskFullTimer = new QTimer(this);
+	connect(diskFullTimer, SIGNAL(timeout()), this,
+		SLOT(CheckDiskSpaceRemaining()));
 
 	QAction *renameScene = new QAction(ui->scenesDock);
 	renameScene->setShortcutContext(Qt::WidgetWithChildrenShortcut);
@@ -1688,6 +1692,23 @@ void OBSBasic::OBSInit()
 	/* setup stats dock */
 	OBSBasicStats *statsDlg = new OBSBasicStats(statsDock, false);
 	statsDock->setWidget(statsDlg);
+
+	/* ----------------------------- */
+	/* add custom browser docks      */
+
+#ifdef BROWSER_AVAILABLE
+	if (cef) {
+		QAction *action = new QAction(QTStr("Basic.MainMenu."
+						    "View.Docks."
+						    "CustomBrowserDocks"));
+		ui->viewMenuDocks->insertAction(ui->toggleScenes, action);
+		connect(action, &QAction::triggered, this,
+			&OBSBasic::ManageExtraBrowserDocks);
+		ui->viewMenuDocks->insertSeparator(ui->toggleScenes);
+
+		LoadExtraBrowserDocks();
+	}
+#endif
 
 	const char *dockStateStr = config_get_string(
 		App()->GlobalConfig(), "BasicWindow", "DockState");
@@ -3430,6 +3451,8 @@ static inline enum obs_scale_type GetScaleType(ConfigFile &basicConfig)
 		return OBS_SCALE_BILINEAR;
 	else if (astrcmpi(scaleTypeStr, "lanczos") == 0)
 		return OBS_SCALE_LANCZOS;
+	else if (astrcmpi(scaleTypeStr, "area") == 0)
+		return OBS_SCALE_AREA;
 	else
 		return OBS_SCALE_BICUBIC;
 }
@@ -3794,8 +3817,15 @@ void OBSBasic::closeEvent(QCloseEvent *event)
 	SaveProjectNow();
 	auth.reset();
 
+	delete extraBrowsers;
+
 	config_set_string(App()->GlobalConfig(), "BasicWindow", "DockState",
 			  saveState().toBase64().constData());
+
+#ifdef BROWSER_AVAILABLE
+	SaveExtraBrowserDocks();
+	ClearExtraBrowserDocks();
+#endif
 
 	if (api)
 		api->on_event(OBS_FRONTEND_EVENT_EXIT);
@@ -4722,7 +4752,7 @@ static BPtr<char> ReadLogFile(const char *subdir, const char *log)
 	if (GetConfigPath(logDir, sizeof(logDir), subdir) <= 0)
 		return nullptr;
 
-	string path = (char *)logDir;
+	string path = logDir;
 	path += "/";
 	path += log;
 
@@ -4792,7 +4822,7 @@ void OBSBasic::on_actionViewCurrentLog_triggered()
 
 	const char *log = App()->GetCurrentLog();
 
-	string path = (char *)logDir;
+	string path = logDir;
 	path += "/";
 	path += log;
 
@@ -5294,6 +5324,12 @@ void OBSBasic::StartRecording()
 	if (disableOutputsRef)
 		return;
 
+	if (LowDiskSpace()) {
+		DiskSpaceMessage();
+		ui->recordButton->setChecked(false);
+		return;
+	}
+
 	if (api)
 		api->on_event(OBS_FRONTEND_EVENT_RECORDING_STARTING);
 
@@ -5337,6 +5373,9 @@ void OBSBasic::RecordingStart()
 	recordingStopping = false;
 	if (api)
 		api->on_event(OBS_FRONTEND_EVENT_RECORDING_STARTED);
+
+	if (!diskFullTimer->isActive())
+		diskFullTimer->start(1000);
 
 	OnActivate();
 	UpdatePause();
@@ -5402,6 +5441,9 @@ void OBSBasic::RecordingStop(int code, QString last_error)
 	if (api)
 		api->on_event(OBS_FRONTEND_EVENT_RECORDING_STOPPED);
 
+	if (diskFullTimer->isActive())
+		diskFullTimer->stop();
+
 	if (remuxAfterRecord)
 		AutoRemux();
 
@@ -5456,6 +5498,12 @@ void OBSBasic::StartReplayBuffer()
 		return;
 
 	if (!NoSourcesConfirmation()) {
+		replayBufferButton->setChecked(false);
+		return;
+	}
+
+	if (LowDiskSpace()) {
+		DiskSpaceMessage();
 		replayBufferButton->setChecked(false);
 		return;
 	}
@@ -7376,6 +7424,8 @@ void OBSBasic::PauseRecording()
 	obs_output_t *output = outputHandler->fileOutput;
 
 	if (obs_output_pause(output, true)) {
+		pause->setAccessibleName(QTStr("Basic.Main.UnpauseRecording"));
+		pause->setToolTip(QTStr("Basic.Main.UnpauseRecording"));
 		pause->setChecked(true);
 		os_atomic_set_bool(&recording_paused, true);
 
@@ -7395,6 +7445,8 @@ void OBSBasic::UnpauseRecording()
 	obs_output_t *output = outputHandler->fileOutput;
 
 	if (obs_output_pause(output, false)) {
+		pause->setAccessibleName(QTStr("Basic.Main.PauseRecording"));
+		pause->setToolTip(QTStr("Basic.Main.PauseRecording"));
 		pause->setChecked(false);
 		os_atomic_set_bool(&recording_paused, false);
 
@@ -7411,19 +7463,10 @@ void OBSBasic::PauseToggled()
 	obs_output_t *output = outputHandler->fileOutput;
 	bool enable = !obs_output_paused(output);
 
-	if (obs_output_pause(output, enable)) {
-		os_atomic_set_bool(&recording_paused, enable);
-
-		if (api)
-			api->on_event(
-				enable ? OBS_FRONTEND_EVENT_RECORDING_PAUSED
-				       : OBS_FRONTEND_EVENT_RECORDING_UNPAUSED);
-
-		if (enable && os_atomic_load_bool(&replaybuf_active))
-			ShowReplayBufferPauseWarning();
-	} else {
-		pause->setChecked(!enable);
-	}
+	if (enable)
+		PauseRecording();
+	else
+		UnpauseRecording();
 }
 
 void OBSBasic::UpdatePause(bool activate)
@@ -7468,5 +7511,44 @@ void OBSBasic::UpdatePause(bool activate)
 		ui->recordingLayout->addWidget(pause.data());
 	} else {
 		pause.reset();
+	}
+}
+
+#define MBYTE (1024ULL * 1024ULL)
+#define MBYTES_LEFT_STOP_REC 50ULL
+#define MAX_BYTES_LEFT (MBYTES_LEFT_STOP_REC * MBYTE)
+
+void OBSBasic::DiskSpaceMessage()
+{
+	blog(LOG_ERROR, "Recording stopped because of low disk space");
+
+	OBSMessageBox::critical(this, QTStr("Output.RecordNoSpace.Title"),
+				QTStr("Output.RecordNoSpace.Msg"));
+}
+
+bool OBSBasic::LowDiskSpace()
+{
+	const char *mode = config_get_string(Config(), "Output", "Mode");
+	const char *path =
+		strcmp(mode, "Advanced")
+			? config_get_string(Config(), "SimpleOutput",
+					    "FilePath")
+			: config_get_string(Config(), "AdvOut", "RecFilePath");
+
+	uint64_t num_bytes = os_get_free_disk_space(path);
+
+	if (num_bytes < (MAX_BYTES_LEFT))
+		return true;
+	else
+		return false;
+}
+
+void OBSBasic::CheckDiskSpaceRemaining()
+{
+	if (LowDiskSpace()) {
+		StopRecording();
+		StopReplayBuffer();
+
+		DiskSpaceMessage();
 	}
 }

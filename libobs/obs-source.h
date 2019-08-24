@@ -145,6 +145,9 @@ enum obs_balance_type {
  */
 #define OBS_SOURCE_MONITOR_BY_DEFAULT (1 << 11)
 
+/** Used internally for audio submixing */
+#define OBS_SOURCE_SUBMIX (1 << 12)
+
 /** @} */
 
 typedef void (*obs_source_enum_proc_t)(obs_source_t *parent,
@@ -466,6 +469,10 @@ struct obs_source_info {
 	obs_properties_t *(*get_properties2)(void *data, void *type_data);
 
 	bool (*snapshot)(void *data, uint8_t* inout_data, uint32_t* out_w, uint32_t* out_h, uint32_t* out_pitch, uint32_t* out_bpp, bool flipY);
+
+	bool (*audio_mix)(void *data, uint64_t *ts_out,
+			  struct audio_output_data *audio_output,
+			  size_t channels, size_t sample_rate);
 };
 
 EXPORT void obs_register_source_s(const struct obs_source_info *info,
