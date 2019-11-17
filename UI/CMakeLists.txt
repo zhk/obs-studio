@@ -146,11 +146,13 @@ if(BROWSER_AVAILABLE_INTERNAL)
 	list(APPEND obs_PLATFORM_SOURCES
 		obf.c
 		auth-oauth.cpp
+		window-dock-browser.cpp
 		window-extra-browsers.cpp
 		)
 	list(APPEND obs_PLATFORM_HEADERS
 		obf.h
 		auth-oauth.hpp
+		window-dock-browser.hpp
 		window-extra-browsers.hpp
 		)
 
@@ -241,6 +243,7 @@ set(obs_SOURCES
 	combobox-ignorewheel.cpp
 	spinbox-ignorewheel.cpp
 	record-button.cpp
+	url-push-button.cpp
 	volume-control.cpp
 	adv-audio-control.cpp
 	item-widget-helpers.cpp
@@ -296,6 +299,7 @@ set(obs_HEADERS
 	menu-button.hpp
 	mute-checkbox.hpp
 	record-button.hpp
+	url-push-button.hpp
 	volume-control.hpp
 	adv-audio-control.hpp
 	item-widget-helpers.hpp
@@ -371,14 +375,6 @@ if (APPLE)
 	target_link_libraries(obs
 			Qt5::MacExtras)
 	set_target_properties(obs PROPERTIES LINK_FLAGS "-pagezero_size 10000 -image_base 100000000")
-	set_property(
-		TARGET obs
-		APPEND
-		PROPERTY INSTALL_RPATH
-		"/usr/local/Cellar/python3/3.6.4_2/Frameworks/Python.framework/Versions/3.6/lib/"
-		"/Library/Frameworks/Python.framework/Versions/3.6/lib/"
-		"/opt/local/Library/Frameworks/Python.framework/Versions/3.6/lib/"
-	)
 endif()
 
 define_graphic_modules(obs)

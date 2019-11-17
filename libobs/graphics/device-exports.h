@@ -33,6 +33,7 @@ EXPORT int device_create(gs_device_t **device, uint32_t adapter);
 EXPORT void device_destroy(gs_device_t *device);
 EXPORT void device_enter_context(gs_device_t *device);
 EXPORT void device_leave_context(gs_device_t *device);
+EXPORT void *device_get_device_obj(gs_device_t *device);
 EXPORT gs_swapchain_t *device_swapchain_create(gs_device_t *device,
 					       const struct gs_init_data *data);
 EXPORT void device_resize(gs_device_t *device, uint32_t x, uint32_t y);
@@ -112,6 +113,7 @@ EXPORT void device_copy_texture_region(gs_device_t *device, gs_texture_t *dst,
 				       uint32_t src_h);
 EXPORT void device_stage_texture(gs_device_t *device, gs_stagesurf_t *dst,
 				 gs_texture_t *src);
+EXPORT void device_begin_frame(gs_device_t *device);
 EXPORT void device_begin_scene(gs_device_t *device);
 EXPORT void device_draw(gs_device_t *device, enum gs_draw_mode draw_mode,
 			uint32_t start_vert, uint32_t num_verts);

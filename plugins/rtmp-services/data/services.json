@@ -807,8 +807,12 @@
           "name": "GameTips.TV",
           "servers": [
               {
-                  "name": "Server Iran",
+                  "name": "Iran - Rasht",
                   "url": "rtmp://rtmp.cdn.server1.gametips.tv:1935/hls"
+              },
+              {
+                  "name": "Germany - Falkenstein/Vogtland",
+                  "url": "rtmp://rtmp.cdn.server2.gametips.tv:1935/hls"
               }
           ]
         },
@@ -1462,6 +1466,20 @@
             }
         },
         {
+            "name": "ChathostessModels",
+            "servers": [
+                {
+                    "name": "ChathostessModels - Default",
+                    "url": "rtmp://wowza01.foobarweb.com/cmschatsys_video"
+                }
+            ],
+            "recommended": {
+                "keyint": 2,
+                "max video bitrate": 3000,
+                "max audio bitrate": 128
+            }
+        },
+        {
             "name": "Camplace",
             "servers": [
                 {
@@ -1494,6 +1512,24 @@
                 "max audio bitrate": 192,
                 "bframes": 0,
                 "x264opts": "tune=zerolatency"
+            }
+        },
+        {
+            "name": "YouNow",
+            "common": false,
+            "servers": [
+                {
+                    "name": "younow.com",
+                    "url": "https://signaling-api.younow-prod.video.propsproject.com/api/v1/ingest/server/"
+                }
+            ],
+            "recommended": {
+                "keyint": 2,
+                "output": "ftl_output",
+                "max audio bitrate": 160,
+                "max video bitrate": 7000,
+                "profile": "main",
+                "bframes": 0
             }
         },
         {
@@ -1554,6 +1590,23 @@
                 "profile": "high",
                 "max video bitrate": 7000,
                 "max audio bitrate": 128
+            }
+        },
+        {
+            "name": "Stars.AVN.com",
+            "servers": [
+                {
+                    "name": "Default",
+                    "url": "rtmp://alpha.gateway.stars.avn.com/live"
+                }
+            ],
+            "recommended": {
+                "keyint": 2,
+                "profile": "main",
+                "max video bitrate": 2500,
+                "max audio bitrate": 192,
+                "bframes": 0,
+                "x264opts": "tune=zerolatency"
             }
         }
     ]

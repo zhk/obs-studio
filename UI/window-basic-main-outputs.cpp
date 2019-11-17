@@ -643,6 +643,7 @@ void SimpleOutput::UpdateRecordingSettings()
 	} else if (videoEncoder == SIMPLE_ENCODER_NVENC) {
 		UpdateRecordingSettings_nvenc(crf);
 	}
+	UpdateRecordingAudioSettings();
 }
 
 inline void SimpleOutput::SetupOutputs()
@@ -1229,6 +1230,10 @@ void AdvancedOutput::UpdateStreamSettings()
 {
 	bool applyServiceSettings = config_get_bool(main->Config(), "AdvOut",
 						    "ApplyServiceSettings");
+	bool dynBitrate =
+		config_get_bool(main->Config(), "Output", "DynamicBitrate");
+	const char *streamEncoder =
+		config_get_string(main->Config(), "AdvOut", "Encoder");
 
 	OBSData settings = GetDataFromJsonFile("streamEncoder.json");
 	ApplyEncoderDefaults(settings, h264Streaming);
@@ -1236,6 +1241,9 @@ void AdvancedOutput::UpdateStreamSettings()
 	if (applyServiceSettings)
 		obs_service_apply_encoder_settings(main->GetService(), settings,
 						   nullptr);
+
+	if (dynBitrate && astrcmpi(streamEncoder, "jim_nvenc") == 0)
+		obs_data_set_bool(settings, "lookahead", false);
 
 	video_t *video = obs_get_video();
 	enum video_format format = video_output_get_format(video);
@@ -1297,7 +1305,18 @@ inline void AdvancedOutput::SetupRecording()
 	bool rescale = config_get_bool(main->Config(), "AdvOut", "RecRescale");
 	const char *rescaleRes =
 		config_get_string(main->Config(), "AdvOut", "RecRescaleRes");
-	int tracks = config_get_int(main->Config(), "AdvOut", "RecTracks");
+	int tracks;
+
+	const char *recFormat =
+		config_get_string(main->Config(), "AdvOut", "RecFormat");
+
+	bool flv = strcmp(recFormat, "flv") == 0;
+
+	if (flv)
+		tracks = config_get_int(main->Config(), "AdvOut", "FLVTrack");
+	else
+		tracks = config_get_int(main->Config(), "AdvOut", "RecTracks");
+
 	obs_data_t *settings = obs_data_create();
 	unsigned int cx = 0;
 	unsigned int cy = 0;
@@ -1332,15 +1351,24 @@ inline void AdvancedOutput::SetupRecording()
 						     h264Recording);
 	}
 
-	for (int i = 0; i < MAX_AUDIO_MIXES; i++) {
-		if ((tracks & (1 << i)) != 0) {
-			obs_output_set_audio_encoder(fileOutput, aacTrack[i],
-						     idx);
-			if (replayBuffer)
-				obs_output_set_audio_encoder(replayBuffer,
+	if (!flv) {
+		for (int i = 0; i < MAX_AUDIO_MIXES; i++) {
+			if ((tracks & (1 << i)) != 0) {
+				obs_output_set_audio_encoder(fileOutput,
 							     aacTrack[i], idx);
-			idx++;
+				if (replayBuffer)
+					obs_output_set_audio_encoder(
+						replayBuffer, aacTrack[i], idx);
+				idx++;
+			}
 		}
+	} else if (flv && tracks != 0) {
+		obs_output_set_audio_encoder(fileOutput, aacTrack[tracks - 1],
+					     idx);
+
+		if (replayBuffer)
+			obs_output_set_audio_encoder(replayBuffer,
+						     aacTrack[tracks - 1], idx);
 	}
 
 	obs_data_set_string(settings, "path", path);
