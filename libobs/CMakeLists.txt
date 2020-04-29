@@ -78,6 +78,11 @@ include_directories(SYSTEM ${ZLIB_INCLUDE_DIR})
 
 add_definitions(-DLIBOBS_EXPORTS)
 
+option(BUILD_NO_VIDEO_LIBS "Build NO_VIDEO_LIBS" FALSE)
+if (BUILD_NO_VIDEO_LIBS)
+	add_definitions(-DNO_VIDEO_LIBS)
+endif()
+
 include_directories(${OBS_JANSSON_INCLUDE_DIRS})
 
 if(WIN32)

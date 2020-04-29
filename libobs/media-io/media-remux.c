@@ -15,11 +15,12 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ******************************************************************************/
 
-#ifndef NO_VIDEO_LIBS
-
 #include "media-remux.h"
 
 #include "../util/base.h"
+
+#ifndef NO_VIDEO_LIBS
+
 #include "../util/bmem.h"
 #include "../util/platform.h"
 
@@ -276,6 +277,25 @@ void media_remux_job_destroy(media_remux_job_t job)
 	avformat_free_context(job->ofmt_ctx);
 
 	bfree(job);
+}
+
+#else
+
+bool media_remux_job_create(media_remux_job_t *job, const char *in_filename, const char *out_filename)
+{
+	blog(LOG_INFO, "media_remux_job_create() NOT implemented!");
+	return false;
+}
+
+bool media_remux_job_process(media_remux_job_t job, media_remux_progress_callback callback, void *data)
+{
+	blog(LOG_INFO, "media_remux_job_process() NOT implemented!");
+	return false;
+}
+
+void media_remux_job_destroy(media_remux_job_t job)
+{
+	blog(LOG_INFO, "media_remux_job_destroy() NOT implemented!");
 }
 
 #endif

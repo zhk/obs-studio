@@ -253,7 +253,7 @@ uint8_t *gs_create_texture_file_data(const char *file,
 
 void gs_init_image_deps(void)
 {
-	blog(LOG_ERROR, "gs_init_image_deps() NOT implemented!");
+	blog(LOG_INFO, "gs_init_image_deps() NOT implemented!");
 }
 
 void gs_free_image_deps(void)
@@ -264,7 +264,7 @@ uint8_t *gs_create_texture_file_data(const char *file,
 	enum gs_color_format *format,
 	uint32_t *cx_out, uint32_t *cy_out)
 {
-	blog(LOG_ERROR, "gs_create_texture_file_data() NOT implemented!");
+	blog(LOG_INFO, "gs_create_texture_file_data() NOT implemented!");
 
 	return 0;
 }

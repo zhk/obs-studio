@@ -202,7 +202,7 @@ int video_scaler_create(video_scaler_t **scaler_out,
 	const struct video_scale_info *src,
 	enum video_scale_type type)
 {
-	blog(LOG_ERROR, "video_scaler_create() NOT implemented!");
+	blog(LOG_INFO, "video_scaler_create() NOT implemented!");
 
 	return VIDEO_SCALER_FAILED;
 }
@@ -215,7 +215,7 @@ bool video_scaler_scale(video_scaler_t *scaler,
 	uint8_t *output[], const uint32_t out_linesize[],
 	const uint8_t *const input[], const uint32_t in_linesize[])
 {
-	blog(LOG_ERROR, "video_scaler_scale() NOT implemented!");
+	blog(LOG_INFO, "video_scaler_scale() NOT implemented!");
 
 	return false;
 }
