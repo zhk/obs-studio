@@ -2389,6 +2389,12 @@ static bool game_capture_snapshot(void *data, uint8_t* inout_data, uint32_t* out
 {
 	struct game_capture *gc = data;
 
+	if (!gc->capturing)
+	{
+		warn("game_capture_snapshot, capturing is not started yet!");
+		return false;
+	}
+
 	if (gc->cx == 0 || gc->cy == 0 || !gc->shmem_data)
 	{
 		warn("game_capture_snapshot, no data yet!");
