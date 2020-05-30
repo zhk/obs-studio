@@ -5,6 +5,17 @@ if (UNIX AND POLICY CMP0072)
 	cmake_policy(SET CMP0072 NEW)
 endif()
 
+if(NOT CMAKE_TOOLCHAIN_FILE)
+    if(WIN32 AND NOT CYGWIN)
+        set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install" CACHE PATH "Installation Directory")
+    else()
+        set(CMAKE_INSTALL_PREFIX "/usr/local" CACHE PATH "Installation Directory")
+    endif()
+else()
+    # any cross-compiling
+    set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install" CACHE PATH "Installation Directory")
+endif()
+
 project(obs-studio)
 
 option(BUILD_CAPTIONS "Build captions" FALSE)
