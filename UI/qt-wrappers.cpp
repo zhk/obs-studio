@@ -25,6 +25,7 @@
 #include <QMessageBox>
 #include <QDataStream>
 #include <QKeyEvent>
+#include <QFileDialog>
 
 #if !defined(_WIN32) && !defined(__APPLE__)
 #include <QX11Info>
@@ -168,6 +169,7 @@ QDataStream &operator>>(QDataStream &in, OBSScene &scene)
 
 	obs_source_t *source = obs_get_source_by_name(QT_TO_UTF8(sceneName));
 	scene = obs_scene_from_source(source);
+	obs_source_release(source);
 
 	return in;
 }
@@ -264,7 +266,7 @@ void ExecuteFuncSafeBlockMsgBox(std::function<void()> func,
 	dlg.setWindowFlags(dlg.windowFlags() & ~Qt::WindowCloseButtonHint);
 	dlg.setWindowTitle(title);
 	dlg.setText(text);
-	dlg.setStandardButtons(0);
+	dlg.setStandardButtons(QMessageBox::StandardButtons());
 
 	auto wait = [&]() {
 		func();
@@ -322,4 +324,77 @@ bool LineEditChanged(QEvent *event)
 	}
 
 	return false;
+}
+
+void setThemeID(QWidget *widget, const QString &themeID)
+{
+	if (widget->property("themeID").toString() != themeID) {
+		widget->setProperty("themeID", themeID);
+
+		/* force style sheet recalculation */
+		QString qss = widget->styleSheet();
+		widget->setStyleSheet("/* */");
+		widget->setStyleSheet(qss);
+	}
+}
+
+QString SelectDirectory(QWidget *parent, QString title, QString path)
+{
+#if defined(BROWSER_AVAILABLE) && defined(__linux__)
+	QString dir = QFileDialog::getExistingDirectory(
+		parent, title, path,
+		QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks |
+			QFileDialog::DontUseNativeDialog);
+#else
+	QString dir = QFileDialog::getExistingDirectory(
+		parent, title, path,
+		QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
+#endif
+
+	return dir;
+}
+
+QString SaveFile(QWidget *parent, QString title, QString path,
+		 QString extensions)
+{
+#if defined(BROWSER_AVAILABLE) && defined(__linux__)
+	QString file = QFileDialog::getSaveFileName(
+		parent, title, path, extensions, nullptr,
+		QFileDialog::DontUseNativeDialog);
+#else
+	QString file =
+		QFileDialog::getSaveFileName(parent, title, path, extensions);
+#endif
+
+	return file;
+}
+
+QString OpenFile(QWidget *parent, QString title, QString path,
+		 QString extensions)
+{
+#if defined(BROWSER_AVAILABLE) && defined(__linux__)
+	QString file = QFileDialog::getOpenFileName(
+		parent, title, path, extensions, nullptr,
+		QFileDialog::DontUseNativeDialog);
+#else
+	QString file =
+		QFileDialog::getOpenFileName(parent, title, path, extensions);
+#endif
+
+	return file;
+}
+
+QStringList OpenFiles(QWidget *parent, QString title, QString path,
+		      QString extensions)
+{
+#if defined(BROWSER_AVAILABLE) && defined(__linux__)
+	QStringList files = QFileDialog::getOpenFileNames(
+		parent, title, path, extensions, nullptr,
+		QFileDialog::DontUseNativeDialog);
+#else
+	QStringList files =
+		QFileDialog::getOpenFileNames(parent, title, path, extensions);
+#endif
+
+	return files;
 }

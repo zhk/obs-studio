@@ -105,3 +105,13 @@ static inline Qt::ConnectionType WaitConnection()
 
 bool LineEditCanceled(QEvent *event);
 bool LineEditChanged(QEvent *event);
+
+void setThemeID(QWidget *widget, const QString &themeID);
+
+QString SelectDirectory(QWidget *parent, QString title, QString path);
+QString SaveFile(QWidget *parent, QString title, QString path,
+		 QString extensions);
+QString OpenFile(QWidget *parent, QString title, QString path,
+		 QString extensions);
+QStringList OpenFiles(QWidget *parent, QString title, QString path,
+		      QString extensions);
