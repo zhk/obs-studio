@@ -2472,6 +2472,6 @@ struct obs_source_info game_capture_info = {
 	.update = game_capture_update,
 	.video_tick = game_capture_tick,
 	.video_render = game_capture_render,
-	.snapshot = game_capture_snapshot,
 	.icon_type = OBS_ICON_TYPE_GAME_CAPTURE,
+	.snapshot = game_capture_snapshot,
 };
